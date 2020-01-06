@@ -1,19 +1,17 @@
-FROM ubuntu:18.04
-# https://www.monodevelop.com/download/#fndtn-download-lin
+FROM rocker/geospatial:3.6.1
+RUN apt update && apt install -y --no-install-recommends \
+  libavcodec-dev \
+  libavformat-dev \
+  libswscale-dev \
+  libtbb-dev \
+  libdc1394-22-dev
+RUN install2.r --ncpus=1 rstan
+RUN installGithub.r swarm-lab/ROpenCVLite
+RUN Rscript -e 'ROpenCVLite::installOpenCV(batch=TRUE)'
+RUN installGithub.r tractatus/wholebrain
 
-RUN apt update -y && apt-get install -y --fix-missing \
-software-properties-common \
-build-essential gcc \
-build-essential
+# https://github.com/rocker-org/rocker-versioned/issues/153#issuecomment-512278246
+RUN mkdir /usr/local/lib/R/host-site-library
 
-ARG DEBIAN_FRONTEND=noninteractive
+RUN echo "R_LIBS_USER=/usr/local/lib/R/host-site-library" >> $(R RHOME)/etc/Renviron.site 
 
-RUN apt-get -y install libcurl4-gnutls-dev libxml2-dev libssl-dev
-RUN apt-get -y install r-base
-RUN apt-get -y  install fftw3 fftw3-dev pkg-config
-
-RUN apt-get -y install libopencv-dev python3-opencv opencv-data 
-
-RUN Rscript -e "install.packages('devtools')"
-RUN Rscript -e "install.packages('rstan', dependencies = TRUE)"
-RUN Rscript -e "devtools::install_github('tractatus/wholebrain')"
